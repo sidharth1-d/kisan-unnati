@@ -1,0 +1,79 @@
+/* ==========================================================================
+   KISAN UNNATI — HIGH-CONTRAST OUTDOOR FARMER THEME & PRINT STYLES
+   ========================================================================== */
+
+:root {
+  --bg-surface: #F8FAF5;
+  --forest-primary: #14532D;
+  --forest-accent: #166534;
+  --border-strong: #CBD5E1;
+}
+
+body {
+  background-color: var(--bg-surface);
+  color: #0F172A;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.55;
+}
+
+/* High-contrast cards with 2px solid borders for midday sunlight visibility */
+.kisan-card {
+  background: #FFFFFF;
+  border: 2px solid #CBD5E1;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  transition: border-color 0.2s ease;
+}
+
+.kisan-card:hover {
+  border-color: #15803D;
+}
+
+/* Sticky Top-Right Language Switcher Active State */
+.lang-btn {
+  padding: 0.35rem 0.75rem;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.lang-btn.active {
+  background-color: #FACC15;
+  color: #0F172A;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.lang-btn:not(.active) {
+  color: #ECFDF5;
+}
+
+.lang-btn:not(.active):hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Interactive Satellite Map Container */
+#satellite-map {
+  height: 290px;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 2px solid #14532D;
+  z-index: 10;
+}
+
+/* Print / Save PDF Styling for Viva Examiner & Farmer Bank Report */
+@media print {
+  .no-print, #onboarding-modal {
+    display: none !important;
+  }
+  body {
+    background: #FFFFFF !important;
+    font-size: 11pt;
+  }
+  .kisan-card {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    margin-bottom: 12px !important;
+  }
+}
