@@ -1,0 +1,96 @@
+{
+  "last_updated": "2026-11-04T06:00:00+05:30",
+  "freight_rates": {
+    "mini_tempo_15qtl_per_km": 22,
+    "pickup_bolero_25qtl_per_km": 28,
+    "eicher_truck_60qtl_per_km": 42,
+    "road_winding_factor": 1.28
+  },
+  "mandis": [
+    {
+      "mandi_id": "pune_gultekdi",
+      "name_en": "Pune APMC (Marketyard Gultekdi)",
+      "name_mr": "पुणे कृषी उत्पन्न बाजार समिती (गुलटेकडी)",
+      "name_hi": "पुणे मंडी (गुलटेकडी)",
+      "district": "Pune",
+      "lat": 18.4868,
+      "lon": 73.8689,
+      "hamali_weighing_per_qtl": 38,
+      "rates": {
+        "harbhara_gram": { "modal": 6350, "min": 5900, "max": 6650 },
+        "rabi_jowar": { "modal": 4550, "min": 4100, "max": 4950 },
+        "rabi_onion": { "modal": 2650, "min": 1900, "max": 3100 },
+        "wheat_lokwan": { "modal": 3280, "min": 2950, "max": 3550 },
+        "soybean_kharif": { "modal": 4920, "min": 4650, "max": 5100 }
+      }
+    },
+    {
+      "mandi_id": "manchar_khed",
+      "name_en": "Manchar / Khed Local APMC",
+      "name_mr": "मंचर / चाकण कृषी उत्पन्न बाजार समिती",
+      "name_hi": "मंचर / चाकण स्थानीय मंडी",
+      "district": "Pune",
+      "lat": 19.0045,
+      "lon": 73.9442,
+      "hamali_weighing_per_qtl": 30,
+      "rates": {
+        "harbhara_gram": { "modal": 6080, "min": 5700, "max": 6250 },
+        "rabi_jowar": { "modal": 4250, "min": 3900, "max": 4450 },
+        "rabi_onion": { "modal": 2480, "min": 1800, "max": 2750 },
+        "wheat_lokwan": { "modal": 3050, "min": 2800, "max": 3200 },
+        "soybean_kharif": { "modal": 4780, "min": 4500, "max": 4900 }
+      }
+    },
+    {
+      "mandi_id": "baramati_apmc",
+      "name_en": "Baramati APMC (Jowar & Grain Hub)",
+      "name_mr": "बारामती कृषी उत्पन्न बाजार समिती",
+      "name_hi": "बारामती कृषि मंडी",
+      "district": "Pune",
+      "lat": 18.1512,
+      "lon": 74.5776,
+      "hamali_weighing_per_qtl": 32,
+      "rates": {
+        "harbhara_gram": { "modal": 6290, "min": 5850, "max": 6500 },
+        "rabi_jowar": { "modal": 4780, "min": 4300, "max": 5200 },
+        "rabi_onion": { "modal": 2420, "min": 1750, "max": 2700 },
+        "wheat_lokwan": { "modal": 3350, "min": 3000, "max": 3600 },
+        "soybean_kharif": { "modal": 4960, "min": 4700, "max": 5150 }
+      }
+    },
+    {
+      "mandi_id": "vashi_navi_mumbai",
+      "name_en": "Vashi Terminal APMC (Navi Mumbai)",
+      "name_mr": "वाशी मुंबई कृषी उत्पन्न बाजार समिती",
+      "name_hi": "वाशी नवी मुंबई टर्मिनल मंडी",
+      "district": "Thane",
+      "lat": 19.0771,
+      "lon": 73.0085,
+      "hamali_weighing_per_qtl": 52,
+      "rates": {
+        "harbhara_gram": { "modal": 6750, "min": 6300, "max": 7100 },
+        "rabi_jowar": { "modal": 4890, "min": 4500, "max": 5300 },
+        "rabi_onion": { "modal": 3080, "min": 2400, "max": 3450 },
+        "wheat_lokwan": { "modal": 3590, "min": 3250, "max": 3850 },
+        "soybean_kharif": { "modal": 5120, "min": 4850, "max": 5300 }
+      }
+    },
+    {
+      "mandi_id": "lasalgaon_nashik",
+      "name_en": "Lasalgaon APMC (Asia's Largest Onion Market)",
+      "name_mr": "लासलगाव कृषी उत्पन्न बाजार समिती (नाशिक)",
+      "name_hi": "लासलगांव मंडी (नासिक)",
+      "district": "Nashik",
+      "lat": 20.1462,
+      "lon": 74.2310,
+      "hamali_weighing_per_qtl": 34,
+      "rates": {
+        "harbhara_gram": { "modal": 6220, "min": 5800, "max": 6450 },
+        "rabi_jowar": { "modal": 4320, "min": 3950, "max": 4550 },
+        "rabi_onion": { "modal": 2820, "min": 2200, "max": 3200 },
+        "wheat_lokwan": { "modal": 3240, "min": 2900, "max": 3450 },
+        "soybean_kharif": { "modal": 4910, "min": 4650, "max": 5080 }
+      }
+    }
+  ]
+}
