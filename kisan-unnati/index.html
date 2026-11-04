@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>किसान उन्नती (Kisan Unnati) — Smart Farm DSS</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#14532D" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet CSS & JS for Esri Satellite Farmland Pin-Drop -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom Sunlight-Readable CSS -->
+  <link rel="stylesheet" href="css/custom.css" />
+</head>
+<body class="min-h-screen pb-14">
+
+  <!-- =====================================================================
+       STICKY TOP NAVBAR (With Persistent Top-Right Language Switcher)
+       ===================================================================== -->
+  <header class="sticky top-0 z-50 bg-green-900 text-white shadow-lg border-b-2 border-yellow-400">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2">
+
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-2.5">
+        <span class="text-3xl">🌾</span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight leading-none" data-i18n="app_title">किसान उन्नती</h1>
+          <p class="text-xs text-green-200 hidden sm:block mt-0.5" data-i18n="app_subtitle">शेती निर्णय व नफा सल्लागार प्रणाली</p>
+        </div>
+      </div>
+
+      <!-- Right Side Controls: Location Pill + PDF + TOP-RIGHT LANGUAGE SWITCHER -->
+      <div class="flex items-center gap-2 sm:gap-3 ml-auto">
+
+        <!-- Active Location Badge -->
+        <button id="btn-reopen-modal" class="no-print bg-green-800 hover:bg-green-700 border border-green-500 text-xs sm:text-sm px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1">
+          <span id="nav-location-badge" data-i18n="detecting_loc">स्थान शोधत आहे...</span>
+          <span class="text-yellow-300 underline ml-1" data-i18n="change_loc_btn">📍 शेत बदला</span>
+        </button>
+
+        <!-- 1-Click Print / Save PDF Button -->
+        <button onclick="window.print()" class="no-print hidden md:inline-flex bg-white text-green-900 hover:bg-yellow-100 text-xs font-bold px-3 py-1.5 rounded-lg shadow">
+          <span data-i18n="print_btn">📄 अहवाल (PDF)</span>
+        </button>
+
+        <!-- PERSISTENT UPPER TOP-RIGHT LANGUAGE SWITCHER -->
+        <div class="bg-green-950 p-1 rounded-xl border border-green-600 flex items-center gap-1" role="group" aria-label="Language Switcher">
+          <button type="button" class="lang-btn active" data-lang-switch="mr">मराठी</button>
+          <button type="button" class="lang-btn" data-lang-switch="hi">हिंदी</button>
+          <button type="button" class="lang-btn" data-lang-switch="en">EN</button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       ONBOARDING MODAL: "ARE YOU AT YOUR FARMLAND?" (Multi-Language + Voice)
+       ===================================================================== -->
+  <div id="onboarding-modal" class="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-3 overflow-y-auto">
+    <div class="bg-white border-4 border-green-800 rounded-2xl max-w-2xl w-full p-5 sm:p-7 shadow-2xl my-auto">
+
+      <!-- Modal Header + Audio Readout -->
+      <div class="flex items-start justify-between gap-3 border-b-2 border-slate-200 pb-3">
+        <div>
+          <span class="inline-block bg-green-100 text-green-900 text-xs font-extrabold px-2.5 py-1 rounded-full mb-1">
+            GPS + SATELLITE FARM TELEMETRY
+          </span>
+          <h2 id="modal-question-text" class="text-xl sm:text-2xl font-extrabold text-slate-900" data-i18n="modal_title">
+            तुम्ही आत्ता तुमच्या शेतात (जमिनीवर) आहात का?
+          </h2>
+        </div>
+        <button type="button" id="btn-speak-modal" class="bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-400 font-bold px-3 py-1.5 rounded-xl text-sm shrink-0">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+
+      <p class="text-slate-700 text-sm sm:text-base mt-3" data-i18n="modal_desc">
+        तुमच्या शेतातील अचूक मातीचा ओलावा, हवामान जोखीम, योग्य पिके आणि जवळची बाजारपेठ शोधण्यासाठी खालील पर्याय निवडा:
+      </p>
+
+      <!-- Quick Farm Profile Inputs (Acres + Irrigation) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 bg-slate-50 p-3.5 rounded-xl border border-slate-300">
+        <div>
+          <label for="input-plot-acres" class="block text-sm font-bold text-slate-800 mb-1" data-i18n="plot_size_label">
+            तुमचे शेत क्षेत्रफळ (एकर मध्ये):
+          </label>
+          <input id="input-plot-acres" type="number" step="0.5" min="0.5" max="100" value="2.5"
+                 class="w-full border-2 border-slate-400 rounded-lg px-3 py-2 text-lg font-extrabold text-green-950 focus:border-green-700 focus:outline-none" />
+        </div>
+        <div>
+          <label for="select-irrigation" class="block text-sm font-bold text-slate-800 mb-1" data-i18n="irrigation_label">
+            सिंचन सुविधा उपलब्ध आहे का?
+          </label>
+          <select id="select-irrigation" class="w-full border-2 border-slate-400 rounded-lg px-3 py-2 text-base font-bold text-slate-900 focus:border-green-700 focus:outline-none">
+            <option value="true" data-i18n="irr_yes">होय (विहीर / कालवा / बोअरवेल)</option>
+            <option value="false" data-i18n="irr_no">नाही (कोरडवाहू / पावसावर आधारित)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Primary Action Buttons: YES (At Farm GPS) vs NO (Satellite Map / Taluka) -->
+      <div class="grid grid-cols-1 gap-3 mt-4">
+        <button type="button" id="btn-at-farm-yes"
+                class="w-full bg-green-800 hover:bg-green-900 text-white font-extrabold text-base sm:text-lg py-3.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 border-2 border-green-950">
+          <span data-i18n="btn_yes_farm">✅ होय, मी आत्ता शेतात आहे (अचूक GPS वापरा)</span>
+        </button>
+
+        <button type="button" id="btn-at-farm-no"
+                class="w-full bg-amber-50 hover:bg-amber-100 text-slate-900 font-bold text-base py-3 px-4 rounded-xl border-2 border-amber-500 flex items-center justify-center gap-2">
+          <span data-i18n="btn_no_home">🗺️ नाही, मी घरी/बाहेर आहे (नकाशा किंवा तालुका निवडा)</span>
+        </button>
+      </div>
+
+      <!-- Status / GPS Accuracy Readout -->
+      <div id="gps-status-msg" class="hidden mt-3 text-sm font-bold text-center py-2 px-3 rounded-lg bg-green-50 text-green-900 border border-green-300"></div>
+
+      <!-- Path B Drawer: Satellite Pin-Drop + Cascading Taluka Selector -->
+      <div id="map-fallback-drawer" class="hidden mt-4 pt-4 border-t-2 border-slate-200 space-y-3">
+        <p class="text-sm font-bold text-slate-800" data-i18n="map_instruction">
+          उपग्रह नकाशावर तुमच्या शेतावर टॅप करा किंवा खालील तालुका निवडा:
+        </p>
+
+        <!-- Leaflet Esri World Imagery Container -->
+        <div id="satellite-map"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+          <div>
+            <label for="select-taluka-preset" class="block text-xs font-bold uppercase text-slate-700 mb-1" data-i18n="select_taluka_label">
+              किंवा जिल्हा / तालुका निवडा:
+            </label>
+            <select id="select-taluka-preset" class="w-full border-2 border-slate-400 rounded-lg px-3 py-2 font-bold text-slate-900">
+              <!-- Populated dynamically from agri_knowledge_base.json -->
+            </select>
+          </div>
+          <button type="button" id="btn-confirm-map-location"
+                  class="w-full bg-green-700 hover:bg-green-800 text-white font-extrabold py-2.5 px-4 rounded-xl shadow">
+            <span data-i18n="confirm_map_btn">✔️ हेच माझे शेत आहे — डॅशबोर्ड उघडा</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MAIN DASHBOARD CONTAINER (8 Core Modules + E-Peek Alert Banner)
+       ===================================================================== -->
+  <main class="max-w-7xl mx-auto px-3 sm:px-6 pt-4 space-y-5">
+
+    <!-- E-Peek Pahani & Macro-Climate Alert Ticker -->
+    <div id="e-peek-alert-banner" class="bg-amber-100 border-2 border-amber-500 text-amber-950 px-4 py-3 rounded-xl font-bold text-sm sm:text-base flex items-center justify-between gap-3">
+      <span id="e-peek-text">⚠️ ई-पीक पाहणी सूचना लोड होत आहे...</span>
+      <span id="gps-mode-pill" class="text-xs bg-green-900 text-white px-2.5 py-1 rounded-full shrink-0">GPS LOCK</span>
+    </div>
+
+    <!-- CARD 1: CHROME BUILT-IN AI ("KRISHI-MITRA") EXECUTIVE SUMMARY -->
+    <section class="kisan-card p-4 sm:p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-green-700">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-green-300 pb-2.5 mb-3">
+        <div class="flex items-center gap-2">
+          <h2 class="text-lg sm:text-xl font-extrabold text-green-950" data-i18n="ai_card_title">
+            🤖 कृषी-मित्र AI सल्लागार (Chrome Built-in AI)
+          </h2>
+          <span id="ai-tier-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-green-800 text-yellow-300">
+            Detecting AI...
+          </span>
+        </div>
+        <button type="button" class="btn-voice-card bg-white hover:bg-amber-100 text-slate-900 border border-slate-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="ai-advisory-content">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+      <div id="ai-advisory-content" class="text-base sm:text-lg font-semibold text-slate-900 space-y-1.5">
+        शेतकऱ्यांसाठी स्थानिक हवामान आणि बाजारभावानुसार सल्ला तयार केला जात आहे...
+      </div>
+    </section>
+
+    <!-- CARD 2: WEATHER, SUB-SURFACE SOIL MOISTURE & SAFE SPRAY WINDOW -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="weather_soil_title">
+          🌦️ आजचे हवामान, जमिनीतील ओलावा व फवारणी वेळ
+        </h2>
+        <div class="flex items-center gap-2">
+          <span id="spray-window-badge" class="text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full bg-green-100 text-green-900 border border-green-500" data-i18n="spray_safe">
+            🟢 फवारणीसाठी सुरक्षित वेळ
+          </span>
+          <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="weather-soil-grid">
+            <span data-i18n="listen_btn">🔊 ऐका</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Visual Metric Tiles -->
+      <div id="weather-soil-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <!-- Populated dynamically by app.js & api_telemetry.js -->
+      </div>
+
+      <!-- Expandable Viva Technical Drawer -->
+      <details class="mt-4 bg-slate-50 border border-slate-300 rounded-xl p-3">
+        <summary class="cursor-pointer font-bold text-sm text-green-900" data-i18n="tech_drawer_toggle">
+          🔬 तांत्रिक माहिती पहा (SoilGrids & ET0 Lab Data)
+        </summary>
+        <div id="technical-lab-drawer" class="mt-2 text-xs sm:text-sm font-mono text-slate-700 grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      </details>
+    </section>
+
+    <!-- CARD 3: TOP 3 RISK-ADJUSTED PROFITABLE CROPS (EL NINO + SOIL + MANDI) -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="crop_rec_title">
+            🌾 तुमच्या शेतासाठी सर्वाधिक नफा देणारी ३ पिके (हवामान जोखीम वजा करून)
+          </h2>
+          <p id="enso-macro-banner" class="text-xs sm:text-sm font-bold text-amber-800 mt-0.5"></p>
+        </div>
+        <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="crop-recommendations-list">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+      <div id="crop-recommendations-list" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Populated dynamically by decision_engine.js -->
+      </div>
+    </section>
+
+    <!-- CARD 4: PRECISION SEED CALCULATOR, BIO-TREATMENT & KRISHI SEVA ORDER -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="seed_calc_title">
+          🌱 बियाणे प्रमाण, बीजप्रक्रिया व जवळचे कृषी सेवा केंद्र ऑर्डर
+        </h2>
+        <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="seed-calculator-box">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+      <div id="seed-calculator-box">
+        <!-- Populated dynamically by decision_engine.js -->
+      </div>
+    </section>
+
+    <!-- CARD 5: INTER-MANDI NET PAYOUT ARBITRAGE ENGINE -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="mandi_arb_title">
+          🚛 बाजार समिती निव्वळ नफा तुलना (वाहतूक व हमाली खर्च वजा करून)
+        </h2>
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+            <span data-i18n="lot_size_label">विक्रीसाठी माल (क्विंटल):</span>
+            <input id="input-mandi-lot-qtl" type="number" min="5" max="200" step="5" value="25"
+                   class="w-20 border-2 border-slate-400 rounded-lg px-2 py-1 font-extrabold text-green-950" />
+          </label>
+          <label class="text-xs sm:text-sm font-bold text-green-900 bg-green-50 border border-green-400 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 cursor-pointer">
+            <input id="chk-shared-tempo" type="checkbox" class="w-4 h-4 accent-green-800" />
+            <span data-i18n="shared_tempo_label">गाडी भाडे विभागणी (50% बचत)</span>
+          </label>
+        </div>
+      </div>
+      <div id="mandi-arbitrage-table-wrap" class="overflow-x-auto">
+        <!-- Populated dynamically by decision_engine.js -->
+      </div>
+    </section>
+
+    <!-- CARD 6: NEAREST COLD STORAGE, ONION CHAWL & 75% PLEDGE LOAN ARBITRAGE -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="storage_title">
+          🏢 जवळचे गोदाम, कांदा चाळ व ७५% शेतमाल तारण कर्ज सल्ला
+        </h2>
+        <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="storage-arbitrage-list">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+      <div id="storage-arbitrage-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Populated dynamically by decision_engine.js -->
+      </div>
+    </section>
+
+    <!-- CARD 7: VERIFIED CONTRACT FARMING & FPO BUYBACK BOARD -->
+    <section class="kisan-card p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3 mb-4">
+        <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="contract_title">
+          🤝 हमीभाव करार शेती (Contract Farming) व FPO खरेदी जाहिराती
+        </h2>
+        <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="contract-farming-list">
+          <span data-i18n="listen_btn">🔊 ऐका</span>
+        </button>
+      </div>
+      <div id="contract-farming-list" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Populated dynamically by decision_engine.js -->
+      </div>
+    </section>
+
+    <!-- CARD 8: GOVERNMENT SCHEMES & NEAREST AGRI-DRONE / CHC RENTAL -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <section class="kisan-card p-4 sm:p-5 lg:col-span-2">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+          <h2 class="text-lg sm:text-xl font-extrabold text-slate-900" data-i18n="schemes_title">
+            🏛️ तुमच्या तालुक्यासाठी पात्र सरकारी योजना (MahaDBT / PoCRA / केंद्र)
+          </h2>
+          <button type="button" class="btn-voice-card bg-amber-50 hover:bg-amber-100 border border-amber-400 font-bold px-3 py-1 rounded-lg text-sm" data-voice-target="gov-schemes-list">
+            <span data-i18n="listen_btn">🔊 ऐका</span>
+          </button>
+        </div>
+        <div id="gov-schemes-list" class="space-y-3"></div>
+      </section>
+
+      <section class="kisan-card p-4 sm:p-5">
+        <div class="border-b border-slate-200 pb-3 mb-4">
+          <h2 class="text-lg font-extrabold text-slate-900" data-i18n="chc_drone_title">
+            🚁 जवळचे कृषी ड्रोन फवारणी व अवजारे बँक केंद्र
+          </h2>
+        </div>
+        <div id="chc-drone-list" class="space-y-3"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- Main ES6 Module Entrypoint -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
